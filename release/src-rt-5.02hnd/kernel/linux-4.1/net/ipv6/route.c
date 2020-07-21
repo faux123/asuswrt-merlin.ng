@@ -562,6 +562,9 @@ static void rt6_probe(struct rt6_info *rt)
 	rcu_read_lock_bh();
 	neigh = __ipv6_neigh_lookup_noref(rt->dst.dev, &rt->rt6i_gateway);
 	if (neigh) {
+		if (neigh->nud_state & NUD_VALID)
+			goto out;
+
 		work = NULL;
 		write_lock(&neigh->lock);
 		if (!(neigh->nud_state & NUD_VALID) &&
@@ -585,6 +588,7 @@ static void rt6_probe(struct rt6_info *rt)
 		schedule_work(&work->work);
 	}
 
+out:
 	rcu_read_unlock_bh();
 }
 #else
