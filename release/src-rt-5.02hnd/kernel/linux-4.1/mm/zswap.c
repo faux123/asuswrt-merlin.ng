@@ -81,17 +81,28 @@ static bool zswap_enabled;
 module_param_named(enabled, zswap_enabled, bool, 0644);
 
 /* Compressor to be used by zswap (fixed at boot for now) */
+
+#ifdef CONFIG_CRYPTO_LZ4
+/* prefer LZ4 if available */
+#define ZSWAP_COMPRESSOR_DEFAULT "lz4"
+#else
 #define ZSWAP_COMPRESSOR_DEFAULT "lzo"
+#endif
 static char *zswap_compressor = ZSWAP_COMPRESSOR_DEFAULT;
 module_param_named(compressor, zswap_compressor, charp, 0444);
 
 /* The maximum percentage of memory that the compressed pool can occupy */
-static unsigned int zswap_max_pool_percent = 20;
+static unsigned int zswap_max_pool_percent = 25;
 module_param_named(max_pool_percent,
 			zswap_max_pool_percent, uint, 0644);
 
 /* Compressed storage to use */
+#ifdef CONFIG_Z3FOLD
+/* prefer z3fold if available */
+#define ZSWAP_ZPOOL_DEFAULT "z3fold"
+#else
 #define ZSWAP_ZPOOL_DEFAULT "zbud"
+#endif
 static char *zswap_zpool_type = ZSWAP_ZPOOL_DEFAULT;
 module_param_named(zpool, zswap_zpool_type, charp, 0444);
 
