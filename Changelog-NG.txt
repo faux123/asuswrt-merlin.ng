@@ -1,6 +1,28 @@
 Asuswrt-Merlin 384/NG Changelog
 ===============================
 
+(Custom fork)
+384.17_git_hash
+
+  - NEW: Added notification when jffs free space drops
+         below 3 MB.
+  - CHANGED: Improved mechanism for providing an available
+             mount point for addon API scripters (dave14305)
+  - FIXED: ddns updates and OpenVPN instances might be launched
+           twice at boot time if the initial ntp clock sync
+           happened too fast.
+  - UPDATED: amtm to 3.1.7.
+  - UPDATED: Root certificate bundle to June 3rd 2020.
+  - UPDATED: OUI database used by the webui.
+  - UPDATED: Dropbear 2020.80 (themiron)
+  - UPDATED: nano to 4.9.3.
+  - CHANGED: Optimized OpenVPN routing policy storage (this change
+             is NOT backward compatible with previous firmwares)
+  - FIXED: ssh/scp client would fail to connect while negotiating
+           a chacha20 connection (themiron)
+  - NEW: Added IPV6 route lookup optimizations from Linux 4.2
+         (https://vincent.bernat.ch/en/blog/2017-performance-progression-ipv6-route-lookup-linux)
+
 384.17 (26-Apr-2020)
   Updating some models (like the RT-AC88U) from stock firmware
   3.0.0.4.384_81790 and newer will require a factory default reset
