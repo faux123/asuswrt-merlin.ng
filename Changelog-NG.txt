@@ -3,6 +3,7 @@ Asuswrt-Merlin 384/NG Changelog
 
 (Custom fork)
 384.17_git_hash (23-July-2020)
+  - NEW: added wireguard (RT-AC86U)
   - NEW: added BFQ I/O scheduler for better performance with external HDD
   (RT-AC86U)
   - NEW: Enable ZSWAP by default (RT-AC86U)
