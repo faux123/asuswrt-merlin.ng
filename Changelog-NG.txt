@@ -2,11 +2,12 @@ Asuswrt-Merlin 384/NG Changelog
 ===============================
 
 (Custom fork)
-384.17_git_hash
-
-  - NEW: Enable ZSWAP by default
-  - NEW: ZSWAP optimization using binary search tree instead of Red-Black tree
+384.17_git_hash (22-July-2020)
+  - NEW: Enable ZSWAP by default (RT-AC86U)
+  - NEW: ZSWAP optimization using binary search tree instead of Red-Black
+  tree (RT-AC86U)
   - NEW: Added ZSWAP with LZ4 compressor and Z3FOLD (from Linux 4.8) zpool
+  (RT-AC86U)
   - NEW: Added notification when jffs free space drops
          below 3 MB.
   - CHANGED: Improved mechanism for providing an available
@@ -23,7 +24,7 @@ Asuswrt-Merlin 384/NG Changelog
              is NOT backward compatible with previous firmwares)
   - FIXED: ssh/scp client would fail to connect while negotiating
            a chacha20 connection (themiron)
-  - NEW: Added IPV6 route lookup optimizations from Linux 4.2
+  - NEW: Added IPV6 route lookup optimizations from Linux 4.2 (RT-AC86U)
          (https://vincent.bernat.ch/en/blog/2017-performance-progression-ipv6-route-lookup-linux)
 
 384.17 (26-Apr-2020)
