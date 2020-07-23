@@ -1,7 +1,5 @@
-asuswrt-merlin New Gen (version 382.xx and higher)
+asuswrt-merlin New Gen (version 384.17 and higher)
 ==================================================
-
-#### Please do not use Github's Issue tracker for support requests.  Use the support forums at [SNBForums](https://www.snbforums.com/forums/asuswrt-merlin.42/) instead.  The issue tracker is for development/bug tracking purposes only!
 
 Asuswrt-Merlin is an enhanced version of Asuswrt, the firmware used by Asus's modern routers.
 
@@ -14,6 +12,6 @@ This is the new development branch, originally based on Asus's
 3.0.0.4.382_xxxx firmware release.  Development of the 380.xx 
 legacy branch has been dropped.
 
-Please consult the Wiki for an up-to-date list of supported models:
-
-https://github.com/RMerl/asuswrt-merlin.ng/wiki/Supported-Devices
+This is a custom fork from Asuswrt-Merlin version 384.17 release.
+This custom fork contained hybrid Linux kernel V4.1.x with new enhancements from newer releases (such as v4.2.x and v4.8.x).
+This fork has only been tested on RT-AC86U and RT-AC68U.
