@@ -1,15 +1,26 @@
 #!/bin/sh
+
+# Paul: adding comments to make this script a bit more maintainable
+# this script is compatible with 384_17 base only.  384_19 has undergone HUGE
+# refactoring, many things here are no longer applicable.
+
+#used by openvpn_config.c write_ovpn_dns() write_ovpn_dnsmasq_config() [libvpn]
 filedir=/etc/openvpn/dns
 filebase=$(echo $filedir/$dev | sed 's/\(tun\|tap\)1/client/')
 conffile=$filebase\.conf
 resolvfile=$filebase\.resolv
+
+#used by openvpn.c start/stop_ovpn_client() [rc]
 dnsscript=$(echo /etc/openvpn/fw/"$dev"-dns\.sh | sed 's/\(tun\|tap\)1/client/')
 qosscript=$(echo /etc/openvpn/fw/"$dev"-qos\.sh | sed 's/\(tun\|tap\)1/client/')
-fileexists=
+
+#local vars
 instance=$(echo $dev | sed "s/tun1//")
+fileexists=
 serverips=
 searchdomains=
 
+### local helper functions
 create_client_list(){
 	server=$1
 	VPN_IP_LIST="$(nvram get vpn_client$(echo $instance)_clientlist)$(nvram get vpn_client$(echo $instance)_clientlist1)$(nvram get vpn_client$(echo $instance)_clientlist2)$(nvram get vpn_client$(echo $instance)_clientlist3)$(nvram get vpn_client$(echo $instance)_clientlist4)$(nvram get vpn_client$(echo $instance)_clientlist5)"
@@ -41,7 +52,6 @@ create_client_list(){
 	IFS=$OLDIFS
 }
 
-
 run_script_event(){
 	if [ -f /jffs/scripts/openvpn-event ]
 	then
@@ -55,9 +65,9 @@ run_script_event(){
 	fi
 }
 
-
 ### Main
 
+# client "down" event
 if [ $script_type = 'down' ]
 then
 	/usr/sbin/iptables -t nat -D PREROUTING -p udp -m udp --dport 53 -j DNSVPN$instance
@@ -76,17 +86,19 @@ then
   	[ -f "$dnsscript" ] && rm "$dnsscript"
 fi
 
+# check for client instance, if none, exit since there are nothing to do
 if [ "$instance" = "" ] || [ "$(nvram get vpn_client$(echo $instance)_adns)" -eq 0 ]
 then
 	run_script_event $*
 	exit 0
 fi
 
-
+# check if conf and resolv files exist
 if [ ! -d $filedir ]; then mkdir $filedir; fi
 if [ -f $conffile ]; then rm $conffile; fileexists=1; fi
 if [ -f $resolvfile ]; then rm $resolvfile; fileexists=1; fi
 
+# client "up" event
 if [ "$script_type" = "up" ]
 then
 
@@ -100,7 +112,7 @@ then
 		setdns=-1
 	fi
 
-# Extract IPs and search domains; write WINS
+	# Extract IPs and search domains; write WINS
 	for optionname in `set | grep "^foreign_option_" | sed "s/^\(.*\)=.*$/\1/g"`
 	do
 		option=`eval "echo \\$$optionname"`
@@ -109,7 +121,7 @@ then
 		if echo $option | grep "dhcp-option DOMAIN"; then searchdomains="$searchdomains $(echo $option | sed "s/dhcp-option DOMAIN //")"; fi
 	done
 
-# Write resolv file
+	# Write resolv file
 	for server in $serverips
 	do
 		echo "server=$server" >> $resolvfile
@@ -130,20 +142,22 @@ then
 		echo /usr/sbin/iptables -t nat -I PREROUTING -p tcp -m tcp --dport 53 -j DNSVPN$instance >> $dnsscript
 	fi
 
-	#change dns scripts to executable permission
+	# change dns scripts to executable permission
 	chmod a+rx $dnsscript
 
-# QoS
+	# QoS
 	if [ "$(nvram get vpn_client$(echo $instance)_rgw)" -ge 1 ] && [ "$(nvram get qos_enable)" -eq 1 ] && [ "$(nvram get qos_type)" -eq 1 ]
 	then
 		echo "#!/bin/sh" >> $qosscript
 		echo /usr/sbin/iptables -t mangle -A POSTROUTING -o br0 -m mark --mark 0x40000000/0xc0000000 -j MARK --set-xmark 0x80000000/0xC0000000 >> $qosscript
-		#change QoS scripts to executable permission
+
+		# change QoS scripts to executable permission
 		chmod a+rx $qosscript
 		/bin/sh $qosscript
 	fi
 fi
 
+# execute post up/down scripts/services such as dnsscripts and updateresolv
 if [ -f $conffile ] || [ -f $resolvfile ] || [ -n "$fileexists" ]
 then
 	if [ $script_type = 'up' ] ; then
@@ -163,10 +177,10 @@ then
 	fi
 fi
 
+# final attempt to cleanup of folders then exit
 rmdir $filedir
 rmdir /etc/openvpn
 
 run_script_event $*
 
 exit 0
-
