@@ -2883,11 +2883,16 @@ CONFIG_NFS_V3=m
 # Asuswrt-merlin paul's fork configuration
 #
 # Enable Zswap and LZ4
-CONFIG_FRONTSWAP=y
-CONFIG_ZSWAP=y
-CONFIG_ZPOOL=y
-CONFIG_ZBUD=y
-CONFIG_Z3FOLD=y
+
+# ZSWAP has a serious issue when memory is full and triggers kswapd
+# needlessly
+#CONFIG_FRONTSWAP=y
+#CONFIG_ZSWAP=y
+#CONFIG_ZPOOL=y
+#CONFIG_ZBUD=y
+#CONFIG_Z3FOLD=y
+CONFIG_ZRAM=y
+CONFIG_ZRAM_LZ4_COMPRESS=y
 CONFIG_CRYPTO_LZ4=y
 CONFIG_IOSCHED_BFQ=y
 CONFIG_WIREGUARD=y
