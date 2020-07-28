@@ -4,18 +4,19 @@
 # this script is compatible with 384_17 base only.  384_19 has undergone HUGE
 # refactoring, many things here are no longer applicable.
 
+instance=$(echo "$dev" | sed "s/tun1//")
+
 #used by openvpn_config.c write_ovpn_dns() write_ovpn_dnsmasq_config() [libvpn]
-filedir=/etc/openvpn/dns
-filebase=$(echo $filedir/$dev | sed 's/\(tun\|tap\)1/client/')
-conffile=$filebase\.conf
-resolvfile=$filebase\.resolv
+openvpnrootdir="/etc/openvpn"
+openvpndnsdir="$openvpnrootdir/dns"
+conffile="$openvpndnsdir/client${instance}.conf"
+resolvfile="$openvpndnsdir/client${instance}.resolv"
 
 #used by openvpn.c start/stop_ovpn_client() [rc]
-dnsscript=$(echo /etc/openvpn/fw/"$dev"-dns\.sh | sed 's/\(tun\|tap\)1/client/')
-qosscript=$(echo /etc/openvpn/fw/"$dev"-qos\.sh | sed 's/\(tun\|tap\)1/client/')
+dnsscript="$openvpnrootdir/fw/client${instance}-dns.sh"
+qosscript="$openvpnrootdir/fw/client${instance}-qos.sh"
 
 #local vars
-instance=$(echo $dev | sed "s/tun1//")
 fileexists=
 serverips=
 searchdomains=
@@ -23,28 +24,30 @@ searchdomains=
 ### local helper functions
 create_client_list(){
 	server=$1
-	VPN_IP_LIST="$(nvram get vpn_client$(echo $instance)_clientlist)$(nvram get vpn_client$(echo $instance)_clientlist1)$(nvram get vpn_client$(echo $instance)_clientlist2)$(nvram get vpn_client$(echo $instance)_clientlist3)$(nvram get vpn_client$(echo $instance)_clientlist4)$(nvram get vpn_client$(echo $instance)_clientlist5)"
-
+	VPN_IP_LIST="$(nvram get vpn_client${instance}_clientlist)"
+	for n in 1 2 3 4 5; do
+		VPN_IP_LIST="${VPN_IP_LIST}$(nvram get vpn_client${instance}_clientlist${n})"
+	done
 	OLDIFS=$IFS
 	IFS="<"
 
 	for ENTRY in $VPN_IP_LIST
 	do
-		if [ "$ENTRY" = "" ]
+		if [ -z "$ENTRY" ]
 		then
 			continue
 		fi
 
 		VPN_IP=$(echo "$ENTRY" | cut -d ">" -f 2)
-		if [ "$VPN_IP" != "" ]
+		if [ -n "$VPN_IP" ]
 		then
 			TARGET_ROUTE=$(echo "$ENTRY" | cut -d ">" -f 4)
 			if [ "$TARGET_ROUTE" = "VPN" ]
 			then
-				echo /usr/sbin/iptables -t nat -A DNSVPN$instance -s $VPN_IP -j DNAT --to-destination $server >> $dnsscript
+				echo /usr/sbin/iptables -t nat -A DNSVPN${instance} -s $VPN_IP -j DNAT --to-destination $server >> $dnsscript
 				/usr/bin/logger -t "openvpn-updown" "Forcing $VPN_IP to use DNS server $server"
 			else
-				echo /usr/sbin/iptables -t nat -I DNSVPN$instance -s $VPN_IP -j RETURN >> $dnsscript
+				echo /usr/sbin/iptables -t nat -I DNSVPN${instance} -s $VPN_IP -j RETURN >> $dnsscript
 				/usr/bin/logger -t "openvpn-updown" "Excluding $VPN_IP from forced DNS routing"
 			fi
 		fi
@@ -70,10 +73,10 @@ run_script_event(){
 # client "down" event
 if [ $script_type = 'down' ]
 then
-	/usr/sbin/iptables -t nat -D PREROUTING -p udp -m udp --dport 53 -j DNSVPN$instance
-	/usr/sbin/iptables -t nat -D PREROUTING -p tcp -m tcp --dport 53 -j DNSVPN$instance
-	/usr/sbin/iptables -t nat -F DNSVPN$instance
-	/usr/sbin/iptables -t nat -X DNSVPN$instance
+	/usr/sbin/iptables -t nat -D PREROUTING -p udp -m udp --dport 53 -j DNSVPN${instance}
+	/usr/sbin/iptables -t nat -D PREROUTING -p tcp -m tcp --dport 53 -j DNSVPN${instance}
+	/usr/sbin/iptables -t nat -F DNSVPN${instance}
+	/usr/sbin/iptables -t nat -X DNSVPN${instance}
 
 	if [ -f $qosscript ]
 	then
@@ -87,14 +90,14 @@ then
 fi
 
 # check for client instance, if none, exit since there are nothing to do
-if [ "$instance" = "" ] || [ "$(nvram get vpn_client$(echo $instance)_adns)" -eq 0 ]
+if [ "$instance" = "" ] || [ "$(nvram get vpn_client${instance}_adns)" -eq 0 ]
 then
 	run_script_event $*
 	exit 0
 fi
 
 # check if conf and resolv files exist
-if [ ! -d $filedir ]; then mkdir $filedir; fi
+if [ ! -d $openvpndnsdir ]; then mkdir $openvpndnsdir; fi
 if [ -f $conffile ]; then rm $conffile; fileexists=1; fi
 if [ -f $resolvfile ]; then rm $resolvfile; fileexists=1; fi
 
@@ -103,9 +106,9 @@ if [ "$script_type" = "up" ]
 then
 
 	echo "#!/bin/sh" >> $dnsscript
-	echo /usr/sbin/iptables -t nat -N DNSVPN$instance >> $dnsscript
+	echo /usr/sbin/iptables -t nat -N DNSVPN${instance} >> $dnsscript
 
-	if [ "$(nvram get vpn_client$(echo $instance)_rgw)" -ge 2 ] && [ "$(nvram get vpn_client$(echo $instance)_adns)" -eq 3 ]
+	if [ "$(nvram get vpn_client${instance}_rgw)" -ge 2 ] && [ "$(nvram get vpn_client${instance}_adns)" -eq 3 ]
 	then
 		setdns=0
 	else
@@ -138,15 +141,15 @@ then
 
 	if [ "$setdns" -eq 1 ]
 	then
-		echo /usr/sbin/iptables -t nat -I PREROUTING -p udp -m udp --dport 53 -j DNSVPN$instance >> $dnsscript
-		echo /usr/sbin/iptables -t nat -I PREROUTING -p tcp -m tcp --dport 53 -j DNSVPN$instance >> $dnsscript
+		echo /usr/sbin/iptables -t nat -I PREROUTING -p udp -m udp --dport 53 -j DNSVPN${instance} >> $dnsscript
+		echo /usr/sbin/iptables -t nat -I PREROUTING -p tcp -m tcp --dport 53 -j DNSVPN${instance} >> $dnsscript
 	fi
 
 	# change dns scripts to executable permission
 	chmod a+rx $dnsscript
 
 	# QoS
-	if [ "$(nvram get vpn_client$(echo $instance)_rgw)" -ge 1 ] && [ "$(nvram get qos_enable)" -eq 1 ] && [ "$(nvram get qos_type)" -eq 1 ]
+	if [ "$(nvram get vpn_client${instance}_rgw)" -ge 1 ] && [ "$(nvram get qos_enable)" -eq 1 ] && [ "$(nvram get qos_type)" -eq 1 ]
 	then
 		echo "#!/bin/sh" >> $qosscript
 		echo /usr/sbin/iptables -t mangle -A POSTROUTING -o br0 -m mark --mark 0x40000000/0xc0000000 -j MARK --set-xmark 0x80000000/0xC0000000 >> $qosscript
@@ -168,7 +171,7 @@ then
 		/sbin/service updateresolv
 	elif [ $script_type = 'down' ]; then
 		rm $dnsscript
-		if [ "$(nvram get vpn_client$(echo $instance)_adns)" = 2 ]
+		if [ "$(nvram get vpn_client${instance}_adns)" = 2 ]
 		then
 			/sbin/service restart_dnsmasq
 		else
@@ -178,8 +181,8 @@ then
 fi
 
 # final attempt to cleanup of folders then exit
-rmdir $filedir
-rmdir /etc/openvpn
+rmdir $openvpndnsdir
+rmdir $openvpnrootdir
 
 run_script_event $*
 
