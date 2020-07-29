@@ -1,4 +1,4 @@
-asuswrt-merlin New Gen (version 384.17 and higher)
+asuswrt-merlin New Gen (version 384.17 fork)
 ==================================================
 
 Asuswrt-Merlin is an enhanced version of Asuswrt, the firmware used by Asus's modern routers.
