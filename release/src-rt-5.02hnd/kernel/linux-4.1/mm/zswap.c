@@ -85,7 +85,7 @@ static bool zswap_pool_reached_full;
 **********************************/
 
 /* Enable/disable zswap (disabled by default) */
-static bool zswap_enabled;
+static bool zswap_enabled = 1;
 module_param_named(enabled, zswap_enabled, bool, 0644);
 
 /* Crypto compressor to use */
