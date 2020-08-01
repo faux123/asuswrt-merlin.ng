@@ -95,6 +95,19 @@ extern __kernel_size_t strcspn(const char *,const char *);
 #ifndef __HAVE_ARCH_MEMSET
 extern void * memset(void *,int,__kernel_size_t);
 #endif
+#ifndef __HAVE_ARCH_MEMSET_PLUS
+extern void *memset32(uint32_t *, uint32_t, __kernel_size_t);
+extern void *memset64(uint64_t *, uint64_t, __kernel_size_t);
+static inline void *memset_l(unsigned long *p, unsigned long v,
+               __kernel_size_t n)
+{
+#if BITS_PER_LONG == 32
+       return memset32((uint32_t *)p, v, n);
+#else
+       return memset64((uint64_t *)p, v, n);
+#endif
+}
+#endif
 #ifndef __HAVE_ARCH_MEMCPY
 extern void * memcpy(void *,const void *,__kernel_size_t);
 #endif
