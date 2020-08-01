@@ -89,7 +89,12 @@ static bool zswap_enabled;
 module_param_named(enabled, zswap_enabled, bool, 0644);
 
 /* Crypto compressor to use */
+#ifdef CONFIG_CRYPTO_LZ4
+/* prefer LZ4 if available */
+#define ZSWAP_COMPRESSOR_DEFAULT "lz4"
+#else
 #define ZSWAP_COMPRESSOR_DEFAULT "lzo"
+#endif
 static char zswap_compressor[CRYPTO_MAX_ALG_NAME] = ZSWAP_COMPRESSOR_DEFAULT;
 static struct kparam_string zswap_compressor_kparam = {
 	.string =	zswap_compressor,
@@ -105,7 +110,12 @@ module_param_cb(compressor, &zswap_compressor_param_ops,
 		&zswap_compressor_kparam, 0644);
 
 /* Compressed storage zpool to use */
+#ifdef CONFIG_Z3FOLD
+/* prefer z3fold if available */
+#define ZSWAP_ZPOOL_DEFAULT "z3fold"
+#else
 #define ZSWAP_ZPOOL_DEFAULT "zbud"
+#endif
 static char zswap_zpool_type[32 /* arbitrary */] = ZSWAP_ZPOOL_DEFAULT;
 static struct kparam_string zswap_zpool_kparam = {
 	.string =	zswap_zpool_type,
@@ -119,7 +129,7 @@ static struct kernel_param_ops zswap_zpool_param_ops = {
 module_param_cb(zpool, &zswap_zpool_param_ops, &zswap_zpool_kparam, 0644);
 
 /* The maximum percentage of memory that the compressed pool can occupy */
-static unsigned int zswap_max_pool_percent = 20;
+static unsigned int zswap_max_pool_percent = 25;
 module_param_named(max_pool_percent, zswap_max_pool_percent, uint, 0644);
 
 /* The threshold for accepting new pages after the max_pool_percent was hit */
