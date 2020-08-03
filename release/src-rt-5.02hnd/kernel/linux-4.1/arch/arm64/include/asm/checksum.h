@@ -5,6 +5,7 @@
 #ifndef __ASM_CHECKSUM_H
 #define __ASM_CHECKSUM_H
 
+#include <linux/export.h>
 #include <linux/in6.h>
 
 #define _HAVE_ARCH_IPV6_CSUM
@@ -20,24 +21,7 @@ static inline __sum16 csum_fold(__wsum csum)
 }
 #define csum_fold csum_fold
 
-static inline __sum16 ip_fast_csum(const void *iph, unsigned int ihl)
-{
-	__uint128_t tmp;
-	u64 sum;
-
-	tmp = *(const __uint128_t *)iph;
-	iph += 16;
-	ihl -= 4;
-	tmp += ((tmp >> 64) | (tmp << 64));
-	sum = tmp >> 64;
-	do {
-		sum += *(const u32 *)iph;
-		iph += 4;
-	} while (--ihl);
-
-	sum += ((sum >> 32) | (sum << 32));
-	return csum_fold((__force u32)(sum >> 32));
-}
+extern __sum16 ip_fast_csum(const void *iph, unsigned int ihl);
 #define ip_fast_csum ip_fast_csum
 
 extern unsigned int do_csum(const unsigned char *buff, int len);
