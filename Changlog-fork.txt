@@ -1,0 +1,18 @@
+Asuswrt-Merlin fork Changelog
+===============================
+
+Added Wireguard (RT-AC86U)
+Added BFQ I/O Scheduler (RT-AC86U) for use with USB HDD
+Added ZSWAP optimizations from Linux 4.8 (RT-AC86U)
+      ZSWAP using z3fold (2.6x compression average)
+      ZSWAP using lz4 compressor
+      ZSWAP using btree instead of rb-tree for better performance
+Added IPV6 route optimization from Linux 4.2 (RT-AC86U)
+Added ARM64 library optimizations from Linux 4.5+ (RT-AC86U)
+      including optimized 128bit integer, optimized csum for net use
+Added ARM64 kernel crypto libraries including chacha20, SHA256/512 (RT-AC86U)
+      enabled ARM64_CRYPTO (not sure if many userspace uses kernel crypto or not)
+
+With pktrunner and flowcache HW acceleration disabled when using Suricata + CAKEQoS
+every bit of performance optimization from base Linux kernel would help make up for
+lack of HW accelertaion.
