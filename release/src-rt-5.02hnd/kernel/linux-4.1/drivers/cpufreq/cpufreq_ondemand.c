@@ -40,8 +40,7 @@ static DEFINE_PER_CPU(struct od_cpu_dbs_info_s, od_cpu_dbs_info);
 
 static struct od_ops od_ops;
 
-#ifndef CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND
-static struct cpufreq_governor cpufreq_gov_ondemand;
+//static struct cpufreq_governor cpufreq_gov_ondemand;
 #if defined(CONFIG_BCM_KF_ONDEMAND)
 // clear current frequency table indices
 static void min_request_clr(struct cpufreq_frequency_table *table)
@@ -51,81 +50,6 @@ static void min_request_clr(struct cpufreq_frequency_table *table)
 	for (idx = 0; table[idx].frequency != CPUFREQ_TABLE_END; idx++)
 		table[idx].driver_data = 0;
 }
-
-// change governor policy min
-static void min_request_chg(struct cpufreq_policy *policy,
-	struct cpufreq_frequency_table *table)
-{
-	unsigned freq, max = 0;
-	int idx = 0;
-
-	// find highest entry whose request count is non-zero
-	while ((freq = table[idx].frequency) != CPUFREQ_TABLE_END) {
-		if (table[idx].driver_data && freq > max)
-			max = freq;
-		idx++;
-	}
-
-	// use lowest min freq if no requests
-	if (max == 0)
-		max = table[0].frequency;
-
-	// update policy if current min != max
-	if (policy->min != max) {
-		struct cpufreq_policy new_policy = *policy;
-		new_policy.min = max;
-
-		if (policy->min < max)
-			__cpufreq_driver_target(policy, max, CPUFREQ_RELATION_L);
-		cpufreq_set_policy(policy, &new_policy);
-	}
-}
-
-// decrement request count for min freq of 'freq'
-static int min_request_dec(struct cpufreq_policy *policy,
-	struct cpufreq_frequency_table *table, unsigned freqmin)
-{
-	unsigned freq;
-	int idx = 0;
-
-	// assume table ordered by frequency; find first entry >= freqmin
-	// (cpufreq_frequency_table_target() honors current policy->min)
-	while ((freq = table[idx].frequency) != CPUFREQ_TABLE_END) {
-		if (freq != CPUFREQ_ENTRY_INVALID && freq >= freqmin) {
-			if (table[idx].driver_data && --table[idx].driver_data == 0) {
-				// expired minimum ... update policy
-				min_request_chg(policy, table);
-			}
-			return 0;
-		}
-		idx++;
-	}
-	return idx;
-}
-
-// increment request count for min freq of 'freq'
-static int min_request_inc(struct cpufreq_policy *policy,
-		struct cpufreq_frequency_table *table, unsigned freqmin)
-{
-	unsigned freq;
-	int idx = 0;
-
-	// assume table ordered by frequency; find first entry >= freqmin
-	// (cpufreq_frequency_table_target() honors current policy->min)
-	while ((freq = table[idx].frequency) != CPUFREQ_TABLE_END) {
-		if (freq != CPUFREQ_ENTRY_INVALID && freq >= freqmin) {
-			if (table[idx].driver_data++ == 0 && freq > policy->min) {
-				// higher minimum ... update policy
-				min_request_chg(policy, table);
-			}
-			return 0;
-		}
-		idx++;
-	}
-	return idx;
-}
-#endif
-
 #endif
 
 static unsigned int default_powersave_bias;
@@ -563,87 +487,7 @@ gov_sys_pol_attr_rw(ignore_nice_load);
 gov_sys_pol_attr_rw(powersave_bias);
 gov_sys_pol_attr_ro(sampling_rate_min);
 
-#if defined(CONFIG_BCM_KF_ONDEMAND)
-static int reservation_update(int freq)
-{
-	struct cpufreq_policy *policy;
-	struct od_cpu_dbs_info_s *dbs_info;
-	int ret, cpu;
-
-	cpu = get_cpu();
-	policy = cpufreq_cpu_get(cpu);
-	put_cpu();
-	if (!policy) return -EFAULT;
-	if (!policy->governor_enabled) return -EINVAL;
-	dbs_info = &per_cpu(od_cpu_dbs_info, policy->cpu);
-	cpufreq_cpu_put(policy);
-
-	if (freq > 0)
-		ret = min_request_inc(policy, dbs_info->freq_table, freq);
-	else
-		ret = min_request_dec(policy, dbs_info->freq_table, -freq);
-
-	return ret ? -ENOENT : 0;
-}
-
-// request to reserve minimum frequency
-static ssize_t show_reserve(struct kobject *a, struct attribute *b,
-	char *buf)
-{
-	struct cpufreq_policy *policy;
-	struct od_cpu_dbs_info_s *dbs_info;
-	unsigned count = 0;
-	unsigned freq;
-	int idx = 0;
-	int cpu;
-
-	cpu = get_cpu();
-	policy = cpufreq_cpu_get(cpu);
-	put_cpu();
-	if (!policy) return -ENOENT;
-	dbs_info = &per_cpu(od_cpu_dbs_info, policy->cpu);
-	cpufreq_cpu_put(policy);
-
-	while ((freq = dbs_info->freq_table[idx].frequency) != CPUFREQ_TABLE_END) {
-		count += sprintf(buf + count, "%u:%u ",
-			dbs_info->freq_table[idx].frequency,
-			dbs_info->freq_table[idx].driver_data);
-		idx++;
-	}
-	count += sprintf(buf + count - 1, "\n") - 1;
-	return count;
-}
-
-static ssize_t store_reserve(struct kobject *a, struct attribute *b,
-	const char *buf, size_t count)
-{
-	int freq;
-
-	if (sscanf(buf, "%d", &freq) != 1)
-		return -EINVAL;
-
-	return reservation_update(freq) ?: count;
-}
-
-define_one_global_rw(reserve);
-
-int cpufreq_minimum_reserve(int freq)
-{
-	return reservation_update(freq);
-}
-EXPORT_SYMBOL(cpufreq_minimum_reserve);
-
-int cpufreq_minimum_unreserve(int freq)
-{
-	return reservation_update(-freq);
-}
-EXPORT_SYMBOL(cpufreq_minimum_unreserve);
-#endif
-
 static struct attribute *dbs_attributes_gov_sys[] = {
-#if defined(CONFIG_BCM_KF_ONDEMAND)
-	&reserve.attr,
-#endif
 	&sampling_rate_min_gov_sys.attr,
 	&sampling_rate_gov_sys.attr,
 	&up_threshold_gov_sys.attr,
@@ -799,9 +643,6 @@ static int od_cpufreq_governor_dbs(struct cpufreq_policy *policy,
 	return cpufreq_governor_dbs(policy, &od_dbs_cdata, event);
 }
 
-#ifndef CONFIG_CPU_FREQ_DEFAULT_GOV_ONDEMAND
-static
-#endif
 struct cpufreq_governor cpufreq_gov_ondemand = {
 	.name			= "ondemand",
 	.governor		= od_cpufreq_governor_dbs,
