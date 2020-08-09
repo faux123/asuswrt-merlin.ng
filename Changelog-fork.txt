@@ -1,18 +1,40 @@
 Asuswrt-Merlin fork Changelog
 ===============================
 
-Added Wireguard (RT-AC86U)
-Added BFQ I/O Scheduler (RT-AC86U) for use with USB HDD
+Added CPUfreq driver (RT-AC86U)
+      Undo tons of BCM/Asus hack on cpufreq
+      enable OnDemand CPU governor, now CPU will scale its frequencies based
+      on load demands (hopefully lower power consumption and lower heat) not
+      running at 1.8 GHz needlessly at all times.  Now will scale from 225MHz
+      to 1.8 GHz based on load demands.
+Added Wireguard (RT-AC86U) as part of default kernel
+Added BFQ I/O Scheduler (RT-AC86U) for use with USB HDD since BFQ is better
+      noop for external HDD.  default noop is still recommended for USB sticks
+      or SSD.
 Added ZSWAP optimizations from Linux 4.8 (RT-AC86U)
       ZSWAP using z3fold (2.6x compression average)
       ZSWAP using lz4 compressor
       ZSWAP using btree instead of rb-tree for better performance
 Added IPV6 route optimization from Linux 4.2 (RT-AC86U)
-Added ARM64 library optimizations from Linux 4.5+ (RT-AC86U)
-      including optimized 128bit integer, optimized csum for net use
+Added ARM64 library optimizations from Linux 5.8+ (RT-AC86U)
+      including optimized 128bit integer, optimized csum for net use,
+      optimized IPV6 csum etc
 Added ARM64 kernel crypto libraries including chacha20, SHA256/512 (RT-AC86U)
-      enabled ARM64_CRYPTO (not sure if many userspace uses kernel crypto or not)
+      enabled ARM64_CRYPTO and tons of ARMV8 crypto extensions from Linux 4.1
+      up to Linux 5.6
+      Kernel crypto interface isn't great, in fact using it actually lowers
+      performance of the applications.
+      Best use with devcrypto out-of-tree patches.
 
-With pktrunner and flowcache HW acceleration disabled when using Suricata + CAKEQoS
-every bit of performance optimization from base Linux kernel would help make up for
-lack of HW accelertaion.
+Additional Notes:
+With pktrunner (proprietary kernel module) and pktflow acceleration
+(another proprietary kernel module) disabled when entering promiscuous mode as
+required by Suricata + CAKEQoS, every bit of performance optimization from
+base Linux kernel will help to make up for lack of proprietary HW accelertaion.
+
+TrendMicro has several proprietary kernel modules such as tdts_udbfw (TrendMicro engine), tdts_udb (TrendMicro database interface) and the infamous
+DCD (Data Collection Daemon, which constantly has level 3 translation errors),
+these and the other proprietary kernel modules makes the firmware difficult to
+be fully optimized without breaking something.
+
+Not having full source to those modules makes this enhancement projects harder and more difficult to keep bug free (whenever the kernel panicked in those proprietary modules, it is nearly impossible to troubleshoot or fix).
