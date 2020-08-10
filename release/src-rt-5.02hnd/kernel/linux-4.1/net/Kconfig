@@ -139,6 +139,7 @@ source "net/wireguard/Kconfig"
 source "net/ipv4/Kconfig"
 source "net/ipv6/Kconfig"
 source "net/netlabel/Kconfig"
+source "net/sch_cake/Kconfig"
 
 endif # if INET
 
