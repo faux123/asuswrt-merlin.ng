@@ -1,0 +1,10 @@
+config NET_PF_RING
+	tristate "PF_RING: optimized ethernet ring management algorithm"
+	help
+	  Say Y here if you want to use the pf_ring optimized ethernet ring
+          management algorithm.
+
+	  To compile this driver as a module, choose M here: the module
+	  will be called sch_cake.
+
+	  If unsure, say N.

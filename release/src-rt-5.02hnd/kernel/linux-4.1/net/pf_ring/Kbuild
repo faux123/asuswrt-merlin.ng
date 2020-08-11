@@ -1,0 +1,5 @@
+ifneq ($(KBUILD_EXTMOD),)
+CONFIG_NET_PF_RING := m
+endif
+
+obj-$(CONFIG_NET_PF_RING)	+= pf_ring.o
