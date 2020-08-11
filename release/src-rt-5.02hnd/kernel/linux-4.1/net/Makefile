@@ -38,6 +38,7 @@ obj-$(CONFIG_ATM)		+= atm/
 obj-$(CONFIG_L2TP)		+= l2tp/
 obj-$(CONFIG_DECNET)		+= decnet/
 obj-$(CONFIG_PHONET)		+= phonet/
+obj-$(CONFIG_NET_PF_RING)	+= pf_ring/
 ifdef BCM_KF # defined(CONFIG_BCM_KF_MHI)
 obj-$(CONFIG_MHI)		+= mhi/
 endif # BCM_KF
