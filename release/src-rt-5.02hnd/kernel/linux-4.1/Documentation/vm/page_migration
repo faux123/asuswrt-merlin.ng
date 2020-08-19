@@ -92,9 +92,8 @@ Steps:
 
 2. Insure that writeback is complete.
 
-3. Prep the new page that we want to move to. It is locked
-   and set to not being uptodate so that all accesses to the new
-   page immediately lock while the move is in progress.
+3. Lock the new page that we want to move to. It is locked so that accesses to
+   this (not yet uptodate) page immediately lock while the move is in progress.
 
 4. The new page is prepped with some settings from the old page so that
    accesses to the new page will discover a page with the correct settings.
