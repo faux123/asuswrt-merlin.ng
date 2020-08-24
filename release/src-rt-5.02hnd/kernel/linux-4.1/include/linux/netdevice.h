@@ -2560,9 +2560,6 @@ static inline bool dev_validate_header(const struct net_device *dev,
 		return true;
 	}
 
-	if (dev->header_ops && dev->header_ops->validate)
-		return dev->header_ops->validate(ll_header, len);
-
 	return false;
 }
 
