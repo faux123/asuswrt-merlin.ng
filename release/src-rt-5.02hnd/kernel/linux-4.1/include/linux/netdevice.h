@@ -1487,7 +1487,8 @@ enum netdev_priv_flags {
  *	@dma:		DMA channel
  *	@mtu:		Interface MTU value
  *	@type:		Interface hardware type
- *	@hard_header_len: Hardware header length
+ *	@hard_header_len: Hardware header length, which means that this is the
+ *			  minimum size of a packet.
  *
  *	@needed_headroom: Extra headroom the hardware may need, but not in all
  *			  cases can this be guaranteed
@@ -2545,6 +2546,21 @@ static inline int dev_parse_header(const struct sk_buff *skb,
 	if (!dev->header_ops || !dev->header_ops->parse)
 		return 0;
 	return dev->header_ops->parse(skb, haddr);
+}
+
+/* ll_header must have at least hard_header_len allocated */
+static inline bool dev_validate_header(const struct net_device *dev,
+				       char *ll_header, int len)
+{
+	if (likely(len >= dev->hard_header_len))
+		return true;
+
+	if (capable(CAP_SYS_RAWIO)) {
+		memset(ll_header + len, 0, dev->hard_header_len - len);
+		return true;
+	}
+
+	return false;
 }
 
 typedef int gifconf_func_t(struct net_device * dev, char __user * bufptr, int len);
