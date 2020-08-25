@@ -1,6 +1,10 @@
 Asuswrt-Merlin fork Changelog
 ===============================
 
+Added backported af_packet from Linux 4.4.y to plug some race conditions and
+      harden some security issues related to af_packet usage
+Added backported mm/migrate from Linux 4.4.y to help reduce memory fragmentation
+      caused by kernel drivers such as zswap and others
 Added sch_cake (aka CAKE QoS) module as part of kernel build
 Added CPUfreq driver (RT-AC86U)
       Undo tons of BCM/Asus hack on cpufreq
@@ -36,6 +40,8 @@ proprietary modules, it is nearly impossible to troubleshoot or fix).
 
 Following enhancements removed from TrendMicro builds (it will cause NPE in
 kernel with tdts_udb proprietary kernel module :'( )
+
+GPL ONLY Builds:
 
 Added ARM64 library optimizations from Linux 5.8+ (RT-AC86U)
       including optimized 128bit integer, optimized csum for net use,
