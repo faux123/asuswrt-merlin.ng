@@ -1,6 +1,9 @@
 Asuswrt-Merlin fork Changelog
 ===============================
 
+Added backported z3fold from Linux 5.8 to allow for memory compaction after
+      zswap usage (reduce kernel memory fragmentation, reduce out of memory
+      conditions)
 Added backported af_packet from Linux 4.4.y to plug some race conditions and
       harden some security issues related to af_packet usage
 Added backported mm/migrate from Linux 4.4.y to help reduce memory fragmentation
